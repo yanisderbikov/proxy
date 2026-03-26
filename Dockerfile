@@ -1,27 +1,29 @@
 FROM alpine:3.20
 
-RUN apk add --no-cache bash curl tzdata
+RUN apk add --no-cache \
+    bash \
+    curl \
+    tzdata \
+    git \
+    build-base \
+    linux-headers \
+    openssl-dev \
+    zlib-dev
 
-RUN mkdir -p /opt/mtproto /data
 WORKDIR /opt/mtproto
 
-RUN curl -L -o mtproto-proxy.tar.gz https://github.com/TelegramMessenger/MTProxy/archive/refs/heads/master.tar.gz \
-    && tar -xzf mtproto-proxy.tar.gz --strip-components=1 \
-    && rm mtproto-proxy.tar.gz
+RUN git clone https://github.com/TelegramMessenger/MTProxy.git .
 
-RUN apk add --no-cache alpine-sdk linux-headers openssl-dev zlib-dev make git \
-    && make -C objs \
-    && apk del alpine-sdk linux-headers openssl-dev zlib-dev make git
+RUN make
 
-RUN curl -L -o /opt/mtproto/proxy-secret https://core.telegram.org/getProxySecret \
-    && curl -L -o /opt/mtproto/proxy-multi.conf https://core.telegram.org/getProxyConfig
+RUN curl -fsSL https://core.telegram.org/getProxySecret -o proxy-secret \
+    && curl -fsSL https://core.telegram.org/getProxyConfig -o proxy-multi.conf
 
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
 ENV PORT=443
-ENV SECRET=00000000000000000000000000000000
-ENV TAG=
+ENV SECRET=c4a9f2d8b7e31a6c9d4f8b2e7a1c5d09
 ENV WORKERS=1
 
 EXPOSE 443
