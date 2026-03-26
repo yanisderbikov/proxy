@@ -1,8 +1,16 @@
 #!/bin/sh
-set -e
+set -eu
 
-if [ "$SECRET" = "00000000000000000000000000000000" ]; then
-  SECRET=$(head -c 16 /dev/urandom | xxd -ps)
+if [ -z "${PORT:-}" ]; then
+  PORT=443
+fi
+
+if [ -z "${SECRET:-}" ]; then
+  SECRET=c4a9f2d8b7e31a6c9d4f8b2e7a1c5d09
+fi
+
+if [ -z "${WORKERS:-}" ]; then
+  WORKERS=1
 fi
 
 exec /opt/mtproto/objs/bin/mtproto-proxy \
@@ -10,4 +18,5 @@ exec /opt/mtproto/objs/bin/mtproto-proxy \
   -p 8888 \
   -H "$PORT" \
   -S "$SECRET" \
-  --aes-pwd proxy-secret proxy-multi.conf
+  -M "$WORKERS" \
+  --aes-pwd /opt/mtproto/proxy-secret /opt/mtproto/proxy-multi.conf
